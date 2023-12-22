@@ -14,10 +14,42 @@ import java.util.stream.Collectors;
 public class SplitvajsService {
 
     private final Set<ExpenseItem> expenseItems = new HashSet<>();
+    private final Set<Payer> payers = new HashSet<>();
 
     public ExpenseItem add(@NonNull ExpenseItem expenseItem) {
         expenseItems.add(expenseItem);
+        handlePayment(expenseItem);
         return expenseItem;
+    }
+
+    private void handlePayment(ExpenseItem expenseItem) {
+
+        String payerName = expenseItem.getPayer();
+        Double cost = expenseItem.getCost();
+        Repayment repayment = expenseItem.getRepayment();
+
+        Optional<Payer> optionalPayer = payers.stream()
+                .filter(p -> p.getName().equalsIgnoreCase(payerName))
+                .findFirst();
+
+        if (optionalPayer.isPresent()) {
+            Payer activePayer = optionalPayer.get();
+            List<Outlay> outlays = activePayer.getOutlays();
+            outlays.add(Outlay.builder()
+                    .amount(cost)
+                    .expectedRepayment(repayment)
+                    .build()
+            );
+        } else {
+            Payer payer = Payer.builder().name(payerName).build();
+            payer.getOutlays().add(
+                    Outlay.builder()
+                            .amount(cost)
+                            .expectedRepayment(repayment)
+                            .build()
+            );
+            payers.add(payer);
+        }
     }
 
     public Set<ExpenseItem> getAll() {
