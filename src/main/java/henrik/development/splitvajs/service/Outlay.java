@@ -9,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class Outlay {
+    private String name;
     private Double amount;
     private Repayment expectedRepayment;
 }

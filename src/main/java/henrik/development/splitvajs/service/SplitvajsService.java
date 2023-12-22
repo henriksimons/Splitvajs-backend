@@ -25,6 +25,7 @@ public class SplitvajsService {
     private void handlePayment(ExpenseItem expenseItem) {
 
         String payerName = expenseItem.getPayer();
+        String expenseName = expenseItem.getName();
         Double cost = expenseItem.getCost();
         Repayment repayment = expenseItem.getRepayment();
 
@@ -33,22 +34,24 @@ public class SplitvajsService {
                 .findFirst();
 
         if (optionalPayer.isPresent()) {
-            Payer activePayer = optionalPayer.get();
-            List<Outlay> outlays = activePayer.getOutlays();
+            Payer identifiedPayer = optionalPayer.get();
+            List<Outlay> outlays = identifiedPayer.getOutlays();
             outlays.add(Outlay.builder()
                     .amount(cost)
+                    .name(expenseName)
                     .expectedRepayment(repayment)
                     .build()
             );
         } else {
-            Payer payer = Payer.builder().name(payerName).build();
-            payer.getOutlays().add(
+            Payer newPayer = Payer.builder().name(payerName).build();
+            newPayer.getOutlays().add(
                     Outlay.builder()
                             .amount(cost)
+                            .name(expenseName)
                             .expectedRepayment(repayment)
                             .build()
             );
-            payers.add(payer);
+            payers.add(newPayer);
         }
     }
 
