@@ -1,13 +1,14 @@
 package henrik.development.splitvajs.controller;
 
 
-import henrik.development.splitvajs.model.ExpenseItem;
+import henrik.development.splitvajs.model.ExpenseModel;
+import henrik.development.splitvajs.service.ExpenseItem;
+import henrik.development.splitvajs.service.IndividualRepayment;
 import henrik.development.splitvajs.service.SplitvajsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -30,8 +31,8 @@ public class SplitvajsController {
     @GetMapping("/expenses")
     public ResponseEntity getExpenses() {
         try {
-            Set<ExpenseItem> expenseItems = service.getAll();
-            return ResponseEntity.ok(expenseItems);
+            Set<ExpenseItem> expenseModels = service.getAll();
+            return ResponseEntity.ok(expenseModels);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
@@ -40,8 +41,8 @@ public class SplitvajsController {
     @GetMapping("/repayments/individual")
     public ResponseEntity getIndividualRepayments() {
         try {
-            Map<String, Double> individualRepayments = service.getIndividualRepayments();
-            return ResponseEntity.ok(individualRepayments);
+            Set<IndividualRepayment> response = service.getIndividualRepayments();
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
@@ -56,10 +57,19 @@ public class SplitvajsController {
         }
     }
 
-    @PostMapping("/expense")
-    public ResponseEntity addExpense(@RequestBody ExpenseItem item) {
+    @GetMapping("/payers")
+    public ResponseEntity getPayers() {
         try {
-            ExpenseItem addedItem = service.add(item);
+            return ResponseEntity.ok(service.getPayers());
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @PostMapping("/expense")
+    public ResponseEntity addExpense(@RequestBody ExpenseModel item) {
+        try {
+            ExpenseModel addedItem = service.add(item);
             return ResponseEntity.ok(String.format("Expense item added: %s", addedItem));
         } catch (Exception e) {
             return getExceptionResponse(e);

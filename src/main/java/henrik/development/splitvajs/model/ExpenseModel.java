@@ -14,7 +14,7 @@ import java.util.UUID;
 @Data
 @Builder
 @EqualsAndHashCode
-public class ExpenseItem {
+public class ExpenseModel {
 
     /**
      * UUID representing the item.
@@ -41,7 +41,7 @@ public class ExpenseItem {
      */
     private Repayment repayment;
 
-    public ExpenseItem(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Repayment repayment) {
+    public ExpenseModel(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Repayment repayment) {
         this.name = Objects.requireNonNull(format(name));
         this.payer = Objects.requireNonNull(format(payer));
         this.cost = cost;

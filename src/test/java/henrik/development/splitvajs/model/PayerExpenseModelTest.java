@@ -7,26 +7,26 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ExpenseItemTest {
+class PayerExpenseModelTest {
 
     @Test
     void testFirstLetterOfNameIsCapitalized() {
         String expected = "Lowercase";
         String input = "lowercase";
-        ExpenseItem expenseItem = ExpenseItem.builder()
+        ExpenseModel expenseModel = ExpenseModel.builder()
                 .name(input)
                 .cost(0D)
                 .repayment(Repayment.EQUAL)
                 .payer(input)
                 .build();
-        assertEquals(expected, expenseItem.getName());
-        assertEquals(expected, expenseItem.getPayer());
+        assertEquals(expected, expenseModel.getName());
+        assertEquals(expected, expenseModel.getPayer());
     }
 
     @Test
     void testExpenseItemCanNotBeInitiatedWithForbiddenNullValues() {
         assertThrows(NullPointerException.class, () -> {
-            ExpenseItem.builder()
+            ExpenseModel.builder()
                     .name(null)
                     .cost(0D)
                     .repayment(Repayment.EQUAL)
@@ -34,7 +34,7 @@ class ExpenseItemTest {
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            ExpenseItem.builder()
+            ExpenseModel.builder()
                     .name("Name")
                     .cost(null)
                     .repayment(Repayment.EQUAL)
@@ -42,7 +42,7 @@ class ExpenseItemTest {
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            ExpenseItem.builder()
+            ExpenseModel.builder()
                     .name("Name")
                     .cost(0D)
                     .repayment(null)
@@ -50,7 +50,7 @@ class ExpenseItemTest {
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            ExpenseItem.builder()
+            ExpenseModel.builder()
                     .name("Name")
                     .cost(0D)
                     .repayment(Repayment.EQUAL)
@@ -61,22 +61,22 @@ class ExpenseItemTest {
 
     @Test
     void testIdIsGenerated() {
-        ExpenseItem expenseItem = ExpenseItem.builder().payer("test").name("test").repayment(Repayment.EQUAL).cost(0D).build();
-        assertNotNull(expenseItem.getId());
+        ExpenseModel expenseModel = ExpenseModel.builder().payer("test").name("test").repayment(Repayment.EQUAL).cost(0D).build();
+        assertNotNull(expenseModel.getId());
     }
 
     @Test
     void testCreationDateIsGenerated() {
         LocalDate localDate = LocalDate.now();
 
-        ExpenseItem expenseItem = ExpenseItem.builder()
+        ExpenseModel expenseModel = ExpenseModel.builder()
                 .payer("test")
                 .name("test")
                 .repayment(Repayment.EQUAL)
                 .cost(0D)
                 .build();
 
-        assertNotNull(expenseItem.getCreationDate());
-        assertEquals(localDate, expenseItem.getCreationDate().toLocalDate());
+        assertNotNull(expenseModel.getCreationDate());
+        assertEquals(localDate, expenseModel.getCreationDate().toLocalDate());
     }
 }

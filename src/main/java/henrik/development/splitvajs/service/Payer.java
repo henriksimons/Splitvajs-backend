@@ -1,25 +1,23 @@
 package henrik.development.splitvajs.service;
 
 import henrik.development.splitvajs.model.Repayment;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @AllArgsConstructor
 @EqualsAndHashCode
+@Getter
+@Setter
 @Builder
 public class Payer {
-    private final List<Outlay> outlays = new ArrayList<>();
+    private final List<PayerExpense> expenses = new ArrayList<>();
     private String name;
 
     public Double getExpectedRepayment() {
-        return outlays.stream()
-                .map(outlay -> outlay.getAmount() * getPercentage(outlay.getExpectedRepayment()))
+        return expenses.stream()
+                .map(payerExpense -> payerExpense.amount() * getPercentage(payerExpense.expectedRepayment()))
                 .reduce(0D, Double::sum);
     }
 
@@ -29,5 +27,14 @@ public class Payer {
         } else if (repayment == Repayment.FULL) {
             return 1D;
         } else return 0D;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Payer{" +
+                "expenses=" + expenses +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
