@@ -1,21 +1,21 @@
 package henrik.development.splitvajs.service;
 
-import henrik.development.splitvajs.model.Repayment;
+import henrik.development.splitvajs.model.Split;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
 
 @Builder
 public record ExpenseItem(LocalDateTime creationDate, String expenseId, String payerName, String name, Double amount,
-                          Repayment repayment) {
+                          Split split) {
     @Override
     public String toString() {
         return "ExpenseItem{" +
                 "expenseId='" + expenseId + '\'' +
-                ", payerName='" + payerName + '\'' +
+                ", receiver='" + payerName + '\'' +
                 ", name='" + name + '\'' +
                 ", amount=" + amount +
-                ", repayment=" + repayment +
+                ", repayment=" + split +
                 '}';
     }
 }

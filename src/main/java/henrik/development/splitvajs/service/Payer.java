@@ -1,6 +1,6 @@
 package henrik.development.splitvajs.service;
 
-import henrik.development.splitvajs.model.Repayment;
+import henrik.development.splitvajs.model.Split;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -17,14 +17,14 @@ public class Payer {
 
     public Double getExpectedRepayment() {
         return expenses.stream()
-                .map(payerExpense -> payerExpense.amount() * getPercentage(payerExpense.expectedRepayment()))
+                .map(payerExpense -> payerExpense.amount() * getPercentage(payerExpense.split()))
                 .reduce(0D, Double::sum);
     }
 
-    private Double getPercentage(Repayment repayment) {
-        if (repayment == Repayment.EQUAL) {
+    private Double getPercentage(Split split) {
+        if (split == Split.EQUAL) {
             return 0.5;
-        } else if (repayment == Repayment.FULL) {
+        } else if (split == Split.FULL) {
             return 1D;
         } else return 0D;
     }

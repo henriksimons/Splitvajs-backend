@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class Outcome {
+public class Result {
     /**
      * Name of the payer to receive the outcome.
      */

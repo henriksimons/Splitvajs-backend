@@ -1,7 +1,7 @@
 package henrik.development.splitvajs.service;
 
-import henrik.development.splitvajs.model.ExpenseModel;
-import henrik.development.splitvajs.model.Repayment;
+import henrik.development.splitvajs.model.RequestModel;
+import henrik.development.splitvajs.model.Split;
 import lombok.Data;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -17,37 +17,38 @@ import java.util.stream.Collectors;
 @Data
 public class SplitvajsService {
 
-    private final Set<ExpenseModel> expenseModels = new HashSet<>();
-    private final Set<ExpenseItem> total = new HashSet<>();
     private final Set<Payer> payers = new HashSet<>();
+    private final Set<RequestModel> requestModels = new HashSet<>();
+    private final Set<ExpenseItem> total = new HashSet<>();
 
-    public ExpenseModel add(@NonNull ExpenseModel expenseModel) {
-        expenseModels.add(expenseModel);
-        handleExpense(expenseModel);
-        return expenseModel;
+    public RequestModel add(@NonNull RequestModel requestModel) {
+        requestModels.add(requestModel);
+        handleExpense(requestModel);
+        return requestModel;
     }
 
-    private void handleExpense(ExpenseModel request) {
+    private void handleExpense(RequestModel request) {
 
         String payerName = request.getPayer();
         String expenseName = request.getName();
         Double cost = request.getCost();
-        Repayment repayment = request.getRepayment();
+        Split split = request.getSplit();
         String expenseId = UUID.randomUUID().toString();
         LocalDateTime creationDate = LocalDateTime.now();
 
         Optional<Payer> optionalPayer = getPayer(payerName);
 
         if (optionalPayer.isPresent()) {
-            handleExistingPayer(expenseId, expenseName, cost, creationDate, repayment, optionalPayer.get());
+            handleExistingPayer(expenseId, expenseName, cost, creationDate, split, optionalPayer.get());
         } else {
-            handleNewPayer(payerName, expenseName, cost, repayment, expenseId, creationDate);
+            handleNewPayer(payerName, expenseName, cost, split, expenseId, creationDate);
         }
     }
 
+
     private Optional<Payer> getPayer(String payerName) {
         if (payerName == null || payerName.isBlank()) {
-            throw new IllegalArgumentException("Parameter payerName can not be null or empty.");
+            throw new IllegalArgumentException("Parameter receiver can not be null or empty.");
         }
         return payers
                 .stream()
@@ -55,36 +56,36 @@ public class SplitvajsService {
                 .findFirst();
     }
 
-    private void handleNewPayer(String payerName, String expenseName, Double cost, Repayment repayment, String expenseId, LocalDateTime creationDate) {
+    private void handleNewPayer(String payerName, String expenseName, Double cost, Split split, String expenseId, LocalDateTime creationDate) {
         Payer payer = Payer.builder()
                 .name(payerName)
                 .build();
         payer.getExpenses().add(PayerExpense.builder()
                 .amount(cost)
                 .creationDate(creationDate)
-                .expectedRepayment(repayment)
+                .split(split)
                 .expenseId(expenseId)
                 .name(expenseName)
                 .build());
         payers.add(payer);
-        addToTotal(expenseId, expenseName, cost, creationDate, payer, repayment);
+        addToTotal(expenseId, expenseName, cost, creationDate, payer, split);
     }
 
-    private void handleExistingPayer(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Repayment repayment, Payer payer) {
+    private void handleExistingPayer(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Split split, Payer payer) {
         payer.getExpenses().add(
                 PayerExpense.builder()
                         .amount(cost)
                         .creationDate(creationDate)
-                        .expectedRepayment(repayment)
+                        .split(split)
                         .expenseId(expenseId)
                         .name(expenseName)
                         .build()
         );
-        addToTotal(expenseId, expenseName, cost, creationDate, payer, repayment);
+        addToTotal(expenseId, expenseName, cost, creationDate, payer, split);
     }
 
 
-    private void addToTotal(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Payer payer, Repayment repayment) {
+    private void addToTotal(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Payer payer, Split split) {
         total.add(
                 ExpenseItem.builder()
                         .amount(cost)
@@ -92,7 +93,7 @@ public class SplitvajsService {
                         .expenseId(expenseId)
                         .name(expenseName)
                         .payerName(payer.getName())
-                        .repayment(repayment)
+                        .split(split)
                         .build()
         );
     }
@@ -108,8 +109,8 @@ public class SplitvajsService {
     }
 
     private Set<String> getPayersInternal() {
-        return expenseModels.stream()
-                .map(ExpenseModel::getPayer)
+        return requestModels.stream()
+                .map(RequestModel::getPayer)
                 .collect(Collectors.toSet());
     }
 
@@ -117,18 +118,18 @@ public class SplitvajsService {
         return payers;
     }
 
-    private Double calculateRepayment(ExpenseModel expenseModel, Set<String> payers) {
-        Double cost = expenseModel.getCost();
+    private Double calculateRepayment(RequestModel requestModel, Set<String> payers) {
+        Double cost = requestModel.getCost();
         int numOfPayers = payers.size();
-        Repayment repayment = expenseModel.getRepayment();
-        if (repayment == Repayment.EQUAL) {
+        Split split = requestModel.getSplit();
+        if (split == Split.EQUAL) {
             return cost / numOfPayers;
         } else
             return cost;
     }
 
     public void clear() {
-        expenseModels.clear();
+        requestModels.clear();
     }
 
     public RepaymentReceiver getRepaymentReceiver() {
@@ -141,7 +142,7 @@ public class SplitvajsService {
             if (cost > costs[0]) {
                 costs[1] = costs[0];
                 costs[0] = cost;
-                payerName[0] = payer;
+                receiver[0] = payer;
             }
         });*/
 
@@ -151,23 +152,23 @@ public class SplitvajsService {
                 .build();
     }
 
-    public Outcome getOutcome() {
+    public Result getResult() {
         Integer numberOfPayers = getPayers().size() - 1; // Because the receiver does not split the rest.
         RepaymentReceiver repaymentReceiver = getRepaymentReceiver();
-        return Outcome.builder()
+        return Result.builder()
                 .amountToReceive(repaymentReceiver.getOutlayAmount() / numberOfPayers)
                 .receiverName(repaymentReceiver.getName())
                 .build();
     }
 
-    public ExpenseModel removeById(String id) {
-        Optional<ExpenseModel> optionalExpenseItem = expenseModels.stream()
-                .filter(expenseModel -> expenseModel.getId().equals(id))
+    public RequestModel removeById(String id) {
+        Optional<RequestModel> optionalExpenseItem = requestModels.stream()
+                .filter(requestModel -> requestModel.getId().equals(id))
                 .findFirst();
         if (optionalExpenseItem.isPresent()) {
-            ExpenseModel expenseModel = optionalExpenseItem.get();
-            expenseModels.remove(expenseModel);
-            return expenseModel;
+            RequestModel requestModel = optionalExpenseItem.get();
+            requestModels.remove(requestModel);
+            return requestModel;
         }
         return null;
     }

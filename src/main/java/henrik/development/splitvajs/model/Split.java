@@ -1,6 +1,6 @@
 package henrik.development.splitvajs.model;
 
-public enum Repayment {
+public enum Split {
     FULL,
     EQUAL
 }

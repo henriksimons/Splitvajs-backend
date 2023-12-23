@@ -14,7 +14,7 @@ import java.util.UUID;
 @Data
 @Builder
 @EqualsAndHashCode
-public class ExpenseModel {
+public class RequestModel {
 
     /**
      * UUID representing the item.
@@ -39,13 +39,13 @@ public class ExpenseModel {
     /**
      * How many percent of the cost the payer expects in return.
      */
-    private Repayment repayment;
+    private Split split;
 
-    public ExpenseModel(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Repayment repayment) {
+    public RequestModel(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Split split) {
         this.name = Objects.requireNonNull(format(name));
         this.payer = Objects.requireNonNull(format(payer));
         this.cost = cost;
-        this.repayment = repayment;
+        this.split = split;
     }
 
     private String format(String string) {
@@ -66,7 +66,7 @@ public class ExpenseModel {
                 ", name='" + name + '\'' +
                 ", payer='" + payer + '\'' +
                 ", cost=" + cost +
-                ", repayment=" + repayment +
+                ", repayment=" + split +
                 ", creationDate=" + creationDate +
                 '}';
     }
