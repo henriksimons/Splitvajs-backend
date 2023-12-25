@@ -48,7 +48,7 @@ public class SplitvajsService {
 
     private Optional<Payer> getPayer(String payerName) {
         if (payerName == null || payerName.isBlank()) {
-            throw new IllegalArgumentException("Parameter receiver can not be null or empty.");
+            throw new IllegalArgumentException("Parameter name can not be null or empty.");
         }
         return payers
                 .stream()
@@ -142,7 +142,7 @@ public class SplitvajsService {
             if (cost > costs[0]) {
                 costs[1] = costs[0];
                 costs[0] = cost;
-                receiver[0] = payer;
+                name[0] = payer;
             }
         });*/
 
@@ -153,7 +153,7 @@ public class SplitvajsService {
     }
 
     public Result getResult() {
-        Integer numberOfPayers = getPayers().size() - 1; // Because the receiver does not split the rest.
+        Integer numberOfPayers = getPayers().size() - 1; // Because the name does not split the rest.
         RepaymentReceiver repaymentReceiver = getRepaymentReceiver();
         return Result.builder()
                 .amountToReceive(repaymentReceiver.getOutlayAmount() / numberOfPayers)

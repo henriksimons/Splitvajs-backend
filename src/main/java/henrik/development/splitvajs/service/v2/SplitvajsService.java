@@ -3,6 +3,7 @@ package henrik.development.splitvajs.service.v2;
 import henrik.development.splitvajs.model.RequestModel;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SplitvajsService {
 
@@ -12,16 +13,16 @@ public interface SplitvajsService {
 
     void clear();
 
-    Payer getPayerById(String id);
+    Person getPayerById(String id);
 
-    Payer getPayer(String name);
+    Person getPayer(String name);
 
-    List<Payer> getPayers();
+    List<Person> getPayers();
 
-    List<Expense> getExpenses(Payer payer);
+    List<Expense> getExpenses(Person person);
 
     List<Expense> getExpenses(String payerId);
 
-    Repayment getResult();
+    Map<String, Double> getResult();
 
 }

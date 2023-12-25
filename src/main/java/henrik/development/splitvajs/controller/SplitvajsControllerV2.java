@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
+@RestController
 @RequestMapping("/v2")
 public class SplitvajsControllerV2 {
     private final SplitvajsServiceImpl service;
@@ -55,7 +56,7 @@ public class SplitvajsControllerV2 {
     public ResponseEntity addExpense(@RequestBody RequestModel request) {
         try {
             Expense added = service.addExpense(request);
-            return ResponseEntity.ok(String.format("Expense item added: %s", added));
+            return ResponseEntity.ok(added);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }

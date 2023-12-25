@@ -12,9 +12,9 @@ public record ExpenseItem(LocalDateTime creationDate, String expenseId, String p
     public String toString() {
         return "ExpenseItem{" +
                 "expenseId='" + expenseId + '\'' +
-                ", receiver='" + payerName + '\'' +
+                ", name='" + payerName + '\'' +
                 ", name='" + name + '\'' +
-                ", amount=" + amount +
+                ", value=" + amount +
                 ", repayment=" + split +
                 '}';
     }

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PayerRequestModelTest {
+class PersonRequestModelTest {
 
     @Test
     void testFirstLetterOfNameIsCapitalized() {

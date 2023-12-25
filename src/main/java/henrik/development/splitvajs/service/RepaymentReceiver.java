@@ -9,11 +9,11 @@ import lombok.Data;
 @Builder
 public class RepaymentReceiver {
     /**
-     * Name of the payer with the largest outlay amount.
+     * Name of the payer with the largest outlay value.
      */
     private String name;
     /**
-     * The amount of the outlay.
+     * The value of the outlay.
      */
     private Double outlayAmount;
 }

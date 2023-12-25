@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class SplitvajsServiceImpl implements SplitvajsService {
@@ -26,11 +23,11 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         if (requestModel == null) {
             throw new IllegalArgumentException("RequestModel can not be null.");
         }
-        Payer payer = resolvePayer(requestModel.getPayer());
+        Person person = resolvePayer(requestModel.getPayer());
         Expense expense = Expense.builder().dateOfCreation(LocalDateTime.now())
                 .id(UUID.randomUUID().toString())
                 .name(requestModel.getName())
-                .payerId(payer.id())
+                .payerId(person.getId())
                 .value(requestModel.getCost())
                 .split(requestModel.getSplit())
                 .build();
@@ -39,8 +36,15 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         if (optionalExpense.isEmpty()) {
             throw new IllegalStateException("Error while saving expense in database.");
         }
-        payer.expenses().add(optionalExpense.get());
+        person.getExpenses().add(optionalExpense.get());
         return expense;
+    }
+
+    private void addDebt(Person payingPerson, Expense expense) {
+        List<Person> people = db.getPeople();
+        people.stream()
+                .filter(person -> !person.getId().equalsIgnoreCase(payingPerson.getId()))
+                .forEach(person -> person.getDebt().put(expense.id(), (expense.value() / people.size())));
     }
 
     @Override
@@ -48,20 +52,22 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return db.getAllExpenses();
     }
 
-    private Payer resolvePayer(String payerName) {
+    private Person resolvePayer(String payerName) {
         if (payerName == null) {
             throw new IllegalArgumentException("PayerName can not be null.");
         }
-        Optional<Payer> optionalPayer = db.getPayer(payerName);
+        Optional<Person> optionalPayer = db.getPayer(payerName);
         if (optionalPayer.isPresent()) {
             return optionalPayer.get();
         } else {
-            Payer payer = Payer.builder()
+            Person person = Person.builder()
                     .id(UUID.randomUUID().toString())
                     .name(payerName)
-                    .expenses(new HashSet<>()).build();
-            db.addPayer(payer);
-            return payer;
+                    .expenses(new HashSet<>())
+                    .debt(new HashMap<>())
+                    .build();
+            db.addPayer(person);
+            return person;
         }
     }
 
@@ -72,7 +78,7 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public Payer getPayerById(String id) {
+    public Person getPayerById(String id) {
         if (id == null) {
             throw new IllegalArgumentException("Parameter id can not be null");
         }
@@ -80,7 +86,7 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public Payer getPayer(String name) {
+    public Person getPayer(String name) {
         if (name == null) {
             throw new IllegalArgumentException("Parameter name can not be null");
         }
@@ -88,13 +94,13 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public List<Payer> getPayers() {
-        return db.getAllPayers();
+    public List<Person> getPayers() {
+        return db.getPeople();
     }
 
     @Override
-    public List<Expense> getExpenses(Payer payer) {
-        return db.getExpensesForPayer(payer);
+    public List<Expense> getExpenses(Person person) {
+        return db.getExpensesForPayer(person);
     }
 
     @Override
@@ -103,42 +109,64 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public Repayment getResult() {
-        List<Payer> payers = db.getAllPayers();
+    public Map<String, Double> getResult() {
 
-        List<Repayment> payerRepayments = payers
-                .stream()
-                .map(payer -> Repayment.builder()
-                        .receiver(payer.name())
-                        .value(getExpectedRepayment(payer))
-                        .build())
-                .sorted((r1, r2) -> (int) (r2.value() - r1.value()))
-                .toList();
+        List<Person> people = db.getPeople();
+        List<Expense> expenses = db.getAllExpenses();
+        int distribution = people.size();
 
-        // TODO: 2023-12-23 Handles size 2 right now.
-        double repaymentValue = payerRepayments.get(0).value() - payerRepayments.get(1).value();
-        String receiver = repaymentValue == 0 ? "Equal" : payerRepayments.get(0).receiver();
+        people.forEach(person -> {
+            expenses.forEach(expense -> {
+                if (!paidBy(person, expense)) {
+                    double debt = (expense.value() / distribution);
+                    person.addDebt(expense.id(), debt);
+                }
+            });
+        });
 
-        return Repayment.builder()
-                .receiver(receiver)
-                .value(repaymentValue)
-                .build();
+        Map<String, Double> debtPerPersonById = getDebtPerPId(people);
+        Map<String, Double> repaymentPerPersonId = getRepaymentPerPId(people);
+
+        Map<String, Double> balancePerPersonId = new HashMap<>();
+        repaymentPerPersonId.forEach((id, repayment) -> {
+            balancePerPersonId.put(getPersonName(id), repayment - debtPerPersonById.get(id));
+        });
+
+        return balancePerPersonId;
     }
 
-    private Double getExpectedRepayment(Payer payer) {
-        return payer.expenses()
-                .stream()
-                .map(expense -> expense.value() * getPercentage(expense.split()))
-                .reduce(0D, Double::sum);
+    private String getPersonName(String id) {
+        Optional<Person> optionalPerson = db.getPayerById(id);
+        if (optionalPerson.isPresent()) {
+            return optionalPerson.get().getName();
+        } else return id;
     }
 
-    private Double getPercentage(Split split) {
+    private boolean paidBy(Person person, Expense expense) {
+        return expense.payerId().equalsIgnoreCase(person.getId());
+    }
+
+    private Map<String, Double> getDebtPerPId(List<Person> persons) {
+        Map<String, Double> debtPerPersonId = new HashMap<>();
+        persons
+                .forEach(person -> debtPerPersonId.put(person.getId(), person.getTotalDebt()));
+        return debtPerPersonId;
+    }
+
+    private Map<String, Double> getRepaymentPerPId(List<Person> persons) {
+        Map<String, Double> repaymentPerPersonId = new HashMap<>();
+        persons
+                .forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
+        return repaymentPerPersonId;
+    }
+
+    private Double getPercentage(Split split, Integer persons) {
         switch (split) {
             case FULL -> {
                 return 1D;
             }
             case EQUAL -> {
-                return 0.5D;
+                return (1.0 / persons) * (persons - 1);
             }
             default -> {
                 return 0D;

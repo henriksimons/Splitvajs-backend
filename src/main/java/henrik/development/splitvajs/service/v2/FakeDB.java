@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class FakeDB {
 
     private final Set<Expense> expenses;
-    private final Set<Payer> payers;
+    private final Set<Person> people;
 
     public Boolean addExpense(Expense expense) {
         return expenses.add(expense);
@@ -26,21 +26,21 @@ public class FakeDB {
                 .findFirst();
     }
 
-    public Boolean addPayer(Payer payer) {
-        return payers.add(payer);
+    public Boolean addPayer(Person person) {
+        return people.add(person);
     }
 
-    public List<Payer> getAllPayers() {
-        return payers.stream().toList();
+    public List<Person> getPeople() {
+        return people.stream().toList();
     }
 
     public List<Expense> getAllExpenses() {
         return expenses.stream().toList();
     }
 
-    public Optional<Payer> getPayer(String payerName) {
-        return payers.stream()
-                .filter(p -> p.name().equalsIgnoreCase(payerName))
+    public Optional<Person> getPayer(String payerName) {
+        return people.stream()
+                .filter(p -> p.getName().equalsIgnoreCase(payerName))
                 .findFirst();
     }
 
@@ -49,19 +49,19 @@ public class FakeDB {
     }
 
     public void clearPayers() {
-        payers.clear();
+        people.clear();
     }
 
-    public Optional<Payer> getPayerById(String id) {
-        return payers.stream()
-                .filter(payer -> payer.id().equalsIgnoreCase(id))
+    public Optional<Person> getPayerById(String id) {
+        return people.stream()
+                .filter(person -> person.getId().equalsIgnoreCase(id))
                 .findFirst();
     }
 
-    public List<Expense> getExpensesForPayer(Payer payer) {
+    public List<Expense> getExpensesForPayer(Person person) {
         return expenses.stream()
                 .filter(p -> Objects.nonNull(p.payerId()))
-                .filter(expense -> expense.payerId().equalsIgnoreCase(payer.id()))
+                .filter(expense -> expense.payerId().equalsIgnoreCase(person.getId()))
                 .collect(Collectors.toList());
     }
 
