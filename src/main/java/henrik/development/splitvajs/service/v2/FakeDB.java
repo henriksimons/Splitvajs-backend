@@ -34,7 +34,7 @@ public class FakeDB {
         return people.stream().toList();
     }
 
-    public List<Expense> getAllExpenses() {
+    public List<Expense> getExpenses() {
         return expenses.stream().toList();
     }
 

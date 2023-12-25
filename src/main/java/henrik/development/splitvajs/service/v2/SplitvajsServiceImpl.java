@@ -49,7 +49,7 @@ public class SplitvajsServiceImpl implements SplitvajsService {
 
     @Override
     public List<Expense> getExpenses() {
-        return db.getAllExpenses();
+        return db.getExpenses();
     }
 
     private Person resolvePayer(String payerName) {
@@ -112,8 +112,8 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     public Map<String, Double> getResult() {
 
         List<Person> people = db.getPeople();
-        List<Expense> expenses = db.getAllExpenses();
-        int distribution = people.size();
+        List<Expense> expenses = db.getExpenses();
+        int distribution = people.size(); // Number of splitters
 
         people.forEach(person -> {
             expenses.forEach(expense -> {
@@ -124,10 +124,11 @@ public class SplitvajsServiceImpl implements SplitvajsService {
             });
         });
 
-        Map<String, Double> debtPerPersonById = getDebtPerPId(people);
-        Map<String, Double> repaymentPerPersonId = getRepaymentPerPId(people);
+        Map<String, Double> debtPerPersonById = getDebtPerPersonId(people);
+        Map<String, Double> repaymentPerPersonId = getRepaymentPerPersonId(people);
 
         Map<String, Double> balancePerPersonId = new HashMap<>();
+
         repaymentPerPersonId.forEach((id, repayment) -> {
             balancePerPersonId.put(getPersonName(id), repayment - debtPerPersonById.get(id));
         });
@@ -146,14 +147,14 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return expense.payerId().equalsIgnoreCase(person.getId());
     }
 
-    private Map<String, Double> getDebtPerPId(List<Person> persons) {
+    private Map<String, Double> getDebtPerPersonId(List<Person> persons) {
         Map<String, Double> debtPerPersonId = new HashMap<>();
         persons
                 .forEach(person -> debtPerPersonId.put(person.getId(), person.getTotalDebt()));
         return debtPerPersonId;
     }
 
-    private Map<String, Double> getRepaymentPerPId(List<Person> persons) {
+    private Map<String, Double> getRepaymentPerPersonId(List<Person> persons) {
         Map<String, Double> repaymentPerPersonId = new HashMap<>();
         persons
                 .forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
