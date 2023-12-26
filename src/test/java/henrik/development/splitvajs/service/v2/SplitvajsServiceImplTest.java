@@ -14,49 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 class SplitvajsServiceImplTest {
 
-
     @Autowired
     SplitvajsServiceImpl service;
-
-    @BeforeEach
-    void setUp() {
-    }
 
     @AfterEach
     void tearDown() {
         service.clear();
-    }
-
-    @Test
-    void add() {
-    }
-
-    @Test
-    void remove() {
-    }
-
-    @Test
-    void getPayerById() {
-    }
-
-    @Test
-    void getPayerByName() {
-    }
-
-    @Test
-    void getPayers() {
-    }
-
-    @Test
-    void getExpenses() {
-    }
-
-    @Test
-    void testGetExpenses() {
-    }
-
-    @Test
-    void getExpensesByPayerId() {
     }
 
     @Test
