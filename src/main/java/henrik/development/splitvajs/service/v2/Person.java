@@ -12,14 +12,17 @@ import java.util.Set;
 @Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Getter
 public class Person {
 
+    @Getter
     private final Map<String, Double> debt;
+    @Getter
     private final Set<Expense> expenses;
+    @Getter
     private final String id;
+    @Getter
     private final String name;
-    public Double getTotalPayment;
+    private Double totalPayment;
 
     /**
      * @param distribution The number of people to split the cost.
@@ -56,7 +59,8 @@ public class Person {
         debt.put(expenseId, debtValue);
     }
 
-    public Double getTotalExpenses() {
-        return expenses.stream().map(Expense::value).reduce(0D, Double::sum);
+    public Double getTotalPayment() {
+        this.totalPayment = expenses.stream().map(Expense::value).reduce(0D, Double::sum);
+        return totalPayment;
     }
 }
