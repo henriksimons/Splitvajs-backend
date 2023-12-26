@@ -13,16 +13,22 @@ public interface SplitvajsService {
 
     void clear();
 
-    Person getPayerById(String id);
+    void removePerson(String id);
 
-    Person getPayer(String name);
+    void removeExpense(String id);
 
-    List<Person> getPayers();
+    Person getPersonById(String id);
+
+    Person getPerson(String name);
+
+    List<Person> getPeople();
 
     List<Expense> getExpenses(Person person);
 
     List<Expense> getExpenses(String payerId);
 
     Map<String, Double> getResult();
+
+    Person addPerson(String name);
 
 }

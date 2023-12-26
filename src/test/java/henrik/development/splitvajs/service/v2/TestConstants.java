@@ -33,4 +33,18 @@ public class TestConstants {
             .cost(40D)
             .build();
 
+    public static final RequestModel RHenrik = RequestModel.builder()
+            .split(Split.EQUAL)
+            .name("2000")
+            .payer("Henrik")
+            .cost(2000D)
+            .build();
+
+    public static final RequestModel RIda = RequestModel.builder()
+            .split(Split.EQUAL)
+            .name("500")
+            .payer("Ida")
+            .cost(500D)
+            .build();
+
 }

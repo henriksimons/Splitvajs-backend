@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Map;
+
 import static henrik.development.splitvajs.service.v2.TestConstants.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class SplitvajsServiceImplTest {
@@ -17,10 +20,6 @@ class SplitvajsServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service.addExpense(R1);
-        service.addExpense(R2);
-        service.addExpense(R3);
-        service.addExpense(R4);
     }
 
     @AfterEach
@@ -62,6 +61,29 @@ class SplitvajsServiceImplTest {
 
     @Test
     void getResult() {
-        service.getResult();
+
+        service.addExpense(R1);
+        service.addExpense(R2);
+        service.addExpense(R3);
+        service.addExpense(R4);
+
+        Map<String, Double> result = service.getResult();
+        assertEquals(590, result.get("A"));
+        assertEquals(-10, result.get("B"));
+        assertEquals(-210, result.get("C"));
+        assertEquals(-370, result.get("D"));
     }
+
+    @Test
+    void getResult2() {
+
+        service.addExpense(RIda);
+        service.addExpense(RHenrik);
+        service.addExpense(RHenrik);
+
+        Map<String, Double> result = service.getResult();
+        assertEquals(1750, result.get("Henrik"));
+        assertEquals(-1750, result.get("Ida"));
+    }
+
 }

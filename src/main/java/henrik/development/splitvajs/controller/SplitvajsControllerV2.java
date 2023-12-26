@@ -1,7 +1,9 @@
 package henrik.development.splitvajs.controller;
 
+import henrik.development.splitvajs.model.PersonRequestModel;
 import henrik.development.splitvajs.model.RequestModel;
 import henrik.development.splitvajs.service.v2.Expense;
+import henrik.development.splitvajs.service.v2.Person;
 import henrik.development.splitvajs.service.v2.SplitvajsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +48,7 @@ public class SplitvajsControllerV2 {
     @GetMapping("/payers")
     public ResponseEntity getPayers() {
         try {
-            return ResponseEntity.ok(service.getPayers());
+            return ResponseEntity.ok(service.getPeople());
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
@@ -68,6 +70,16 @@ public class SplitvajsControllerV2 {
         try {
             service.clear();
             return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @PostMapping("/payer")
+    public ResponseEntity addPerson(@RequestBody PersonRequestModel request) {
+        try {
+            Person added = service.addPerson(request.getName());
+            return ResponseEntity.ok(added);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }

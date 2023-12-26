@@ -1,7 +1,7 @@
 package henrik.development.splitvajs.service.v2;
 
 import henrik.development.splitvajs.model.RequestModel;
-import henrik.development.splitvajs.model.Split;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,28 +11,26 @@ import java.util.*;
 @Component
 public class SplitvajsServiceImpl implements SplitvajsService {
 
-    private final FakeDB db;
+    private final Group group;
 
     @Autowired
-    public SplitvajsServiceImpl(FakeDB db) {
-        this.db = db;
+    public SplitvajsServiceImpl(Group group) {
+        this.group = group;
     }
 
     @Override
-    public Expense addExpense(RequestModel requestModel) {
-        if (requestModel == null) {
-            throw new IllegalArgumentException("RequestModel can not be null.");
-        }
+    public Expense addExpense(@NonNull RequestModel requestModel) {
         Person person = resolvePayer(requestModel.getPayer());
-        Expense expense = Expense.builder().dateOfCreation(LocalDateTime.now())
+        Expense expense = Expense.builder()
+                .dateOfCreation(LocalDateTime.now())
                 .id(UUID.randomUUID().toString())
                 .name(requestModel.getName())
                 .payerId(person.getId())
                 .value(requestModel.getCost())
                 .split(requestModel.getSplit())
                 .build();
-        db.addExpense(expense);
-        Optional<Expense> optionalExpense = db.getExpense(expense);
+        group.addExpense(expense);
+        Optional<Expense> optionalExpense = group.getExpense(expense);
         if (optionalExpense.isEmpty()) {
             throw new IllegalStateException("Error while saving expense in database.");
         }
@@ -40,23 +38,13 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return expense;
     }
 
-    private void addDebt(Person payingPerson, Expense expense) {
-        List<Person> people = db.getPeople();
-        people.stream()
-                .filter(person -> !person.getId().equalsIgnoreCase(payingPerson.getId()))
-                .forEach(person -> person.getDebt().put(expense.id(), (expense.value() / people.size())));
-    }
-
     @Override
     public List<Expense> getExpenses() {
-        return db.getExpenses();
+        return group.getExpenses();
     }
 
-    private Person resolvePayer(String payerName) {
-        if (payerName == null) {
-            throw new IllegalArgumentException("PayerName can not be null.");
-        }
-        Optional<Person> optionalPayer = db.getPayer(payerName);
+    private Person resolvePayer(@NonNull String payerName) {
+        Optional<Person> optionalPayer = group.getPerson(payerName);
         if (optionalPayer.isPresent()) {
             return optionalPayer.get();
         } else {
@@ -66,53 +54,57 @@ public class SplitvajsServiceImpl implements SplitvajsService {
                     .expenses(new HashSet<>())
                     .debt(new HashMap<>())
                     .build();
-            db.addPayer(person);
+            group.addPayer(person);
             return person;
         }
     }
 
     @Override
     public void clear() {
-        db.clearExpenses();
-        db.clearPayers();
+        group.clearExpenses();
+        group.clearPayers();
     }
 
     @Override
-    public Person getPayerById(String id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Parameter id can not be null");
-        }
-        return db.getPayerById(id).orElse(null);
+    public void removePerson(@NonNull String id) {
+        group.removePerson(id);
     }
 
     @Override
-    public Person getPayer(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("Parameter name can not be null");
-        }
-        return db.getPayer(name).orElse(null);
+    public void removeExpense(@NonNull String id) {
+        group.removeExpense(id);
     }
 
     @Override
-    public List<Person> getPayers() {
-        return db.getPeople();
+    public Person getPersonById(@NonNull String id) {
+        return group.getPayerById(id).orElse(null);
     }
 
     @Override
-    public List<Expense> getExpenses(Person person) {
-        return db.getExpensesForPayer(person);
+    public Person getPerson(@NonNull String name) {
+        return group.getPerson(name).orElse(null);
     }
 
     @Override
-    public List<Expense> getExpenses(String payerId) {
-        return db.getExpensesByPayerId(payerId);
+    public List<Person> getPeople() {
+        return group.getPeople();
+    }
+
+    @Override
+    public List<Expense> getExpenses(@NonNull Person person) {
+        return group.getExpensesForPayer(person);
+    }
+
+    @Override
+    public List<Expense> getExpenses(@NonNull String payerId) {
+        return group.getExpensesByPayerId(payerId);
     }
 
     @Override
     public Map<String, Double> getResult() {
 
-        List<Person> people = db.getPeople();
-        List<Expense> expenses = db.getExpenses();
+        List<Person> people = group.getPeople();
+        List<Expense> expenses = group.getExpenses();
         int distribution = people.size(); // Number of splitters
 
         people.forEach(person -> {
@@ -136,8 +128,19 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return balancePerPersonId;
     }
 
+    @Override
+    public Person addPerson(@NonNull String name) {
+        Person person = Person.builder()
+                .id(UUID.randomUUID().toString())
+                .debt(new HashMap<>())
+                .expenses(new HashSet<>())
+                .name(name)
+                .build();
+        return group.addPerson(person);
+    }
+
     private String getPersonName(String id) {
-        Optional<Person> optionalPerson = db.getPayerById(id);
+        Optional<Person> optionalPerson = group.getPayerById(id);
         if (optionalPerson.isPresent()) {
             return optionalPerson.get().getName();
         } else return id;
@@ -159,19 +162,5 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         persons
                 .forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
         return repaymentPerPersonId;
-    }
-
-    private Double getPercentage(Split split, Integer persons) {
-        switch (split) {
-            case FULL -> {
-                return 1D;
-            }
-            case EQUAL -> {
-                return (1.0 / persons) * (persons - 1);
-            }
-            default -> {
-                return 0D;
-            }
-        }
     }
 }
