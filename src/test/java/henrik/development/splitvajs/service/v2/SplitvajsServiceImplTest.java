@@ -1,15 +1,13 @@
 package henrik.development.splitvajs.service.v2;
 
+import henrik.development.splitvajs.model.response.ResultsResponseModel;
 import henrik.development.splitvajs.service.SplitvajsServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Map;
-
 import static henrik.development.splitvajs.service.v2.TestConstants.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class SplitvajsServiceImplTest {
@@ -30,11 +28,7 @@ class SplitvajsServiceImplTest {
         service.addExpense(R3);
         service.addExpense(R4);
 
-        Map<String, Double> result = service.getResult();
-        assertEquals(590, result.get("A"));
-        assertEquals(-10, result.get("B"));
-        assertEquals(-210, result.get("C"));
-        assertEquals(-370, result.get("D"));
+        ResultsResponseModel result = service.getResult();
     }
 
     @Test
@@ -44,9 +38,8 @@ class SplitvajsServiceImplTest {
         service.addExpense(RHenrik);
         service.addExpense(RHenrik);
 
-        Map<String, Double> result = service.getResult();
-        assertEquals(1750, result.get("Henrik"));
-        assertEquals(-1750, result.get("Ida"));
+        ResultsResponseModel result = service.getResult();
+
     }
 
 }

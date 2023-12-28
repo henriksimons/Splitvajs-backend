@@ -1,8 +1,4 @@
 package henrik.development.splitvajs.model.request;
 
-import lombok.Data;
-
-@Data
-public class PersonRequestModel {
-    private String name;
+public record PersonRequestModel(String name) {
 }

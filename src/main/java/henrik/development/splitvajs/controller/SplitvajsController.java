@@ -13,7 +13,6 @@ import java.util.Objects;
 
 @CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 @RestController
-@RequestMapping("/v2")
 public class SplitvajsController {
     private final SplitvajsServiceImpl service;
 
@@ -40,7 +39,7 @@ public class SplitvajsController {
     @PostMapping("/person")
     public ResponseEntity addPerson(@RequestBody PersonRequestModel request) {
         try {
-            Person added = service.addPerson(request.getName());
+            Person added = service.addPerson(request.name());
             return ResponseEntity.ok(added);
         } catch (Exception e) {
             return getExceptionResponse(e);
@@ -75,7 +74,7 @@ public class SplitvajsController {
         }
     }
 
-    @GetMapping("/payers")
+    @GetMapping("/persons")
     public ResponseEntity getPersons() {
         try {
             return ResponseEntity.ok(service.getPeople());

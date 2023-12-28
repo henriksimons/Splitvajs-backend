@@ -2,9 +2,9 @@ package henrik.development.splitvajs.service;
 
 import henrik.development.splitvajs.model.request.ExpenseRequestModel;
 import henrik.development.splitvajs.model.response.ExpenseResponseModel;
+import henrik.development.splitvajs.model.response.ResultsResponseModel;
 
 import java.util.List;
-import java.util.Map;
 
 public interface SplitvajsService {
 
@@ -26,7 +26,7 @@ public interface SplitvajsService {
 
     Person getPersonById(String id);
 
-    Map<String, Double> getResult();
+    ResultsResponseModel getResult();
 
     void removeExpense(String id);
 

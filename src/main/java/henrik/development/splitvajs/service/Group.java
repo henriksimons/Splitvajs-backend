@@ -22,7 +22,8 @@ public class Group {
     }
 
     public Person addPerson(Person person) {
-        return people.put(person.getId(), person);
+        people.put(person.getId(), person);
+        return people.get(person.getId());
     }
 
     public void clearExpenses() {

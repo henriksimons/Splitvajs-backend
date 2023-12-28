@@ -3,6 +3,8 @@ package henrik.development.splitvajs.service;
 import henrik.development.splitvajs.model.Split;
 import henrik.development.splitvajs.model.request.ExpenseRequestModel;
 import henrik.development.splitvajs.model.response.ExpenseResponseModel;
+import henrik.development.splitvajs.model.response.ResultResponseModel;
+import henrik.development.splitvajs.model.response.ResultsResponseModel;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -129,12 +131,42 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public Map<String, Double> getResult() {
+    public ResultsResponseModel getResult() {
 
         List<Person> people = group.getPeople();
         List<Expense> expenses = group.getExpenses();
-        int distribution = people.size(); // Number of splitters
 
+        calculateIndividualDebt(people, expenses);
+
+        Map<String, Double> debtPerPersonById = getDebtPerPersonId(people);
+        Map<String, Double> repaymentPerPersonId = getRepaymentPerPersonId(people);
+        Map<String, Double> totalPaymentPerPersonId = getTotalPaymentPerPersonId(people);
+
+        Map<String, Double> balancePerPersonId = new HashMap<>();
+
+        repaymentPerPersonId.forEach((id, repayment) -> {
+            balancePerPersonId.put(id, repayment - debtPerPersonById.get(id));
+        });
+
+        ResultsResponseModel results = new ResultsResponseModel();
+
+        balancePerPersonId
+                .entrySet()
+                .stream()
+                .map(result -> ResultResponseModel.builder()
+                        .personId(result.getKey())
+                        .personName(getPersonName(result.getKey()))
+                        .totalDebt(debtPerPersonById.get(result.getKey()))
+                        .totalExpenses(totalPaymentPerPersonId.get(result.getKey()))
+                        .balance(result.getValue())
+                        .build()
+                ).forEach(results::add);
+
+        return results;
+    }
+
+    private void calculateIndividualDebt(List<Person> people, List<Expense> expenses) {
+        int distribution = people.size(); // Number of splitters
         people.forEach(person -> {
             expenses.forEach(expense -> {
                 if (!paidBy(person, expense)) {
@@ -143,35 +175,24 @@ public class SplitvajsServiceImpl implements SplitvajsService {
                 }
             });
         });
-
-        Map<String, Double> debtPerPersonById = getDebtPerPersonId(people);
-        Map<String, Double> repaymentPerPersonId = getRepaymentPerPersonId(people);
-
-        Map<String, Double> balancePerPersonId = new HashMap<>();
-
-        repaymentPerPersonId.forEach((id, repayment) -> {
-            balancePerPersonId.put(getPersonName(id), repayment - debtPerPersonById.get(id));
-        });
-
-        return balancePerPersonId;
-    }
-
-    private boolean paidBy(Person person, Expense expense) {
-        return expense.payerId().equalsIgnoreCase(person.getId());
     }
 
     private Map<String, Double> getDebtPerPersonId(List<Person> persons) {
         Map<String, Double> debtPerPersonId = new HashMap<>();
-        persons
-                .forEach(person -> debtPerPersonId.put(person.getId(), person.getTotalDebt()));
+        persons.forEach(person -> debtPerPersonId.put(person.getId(), person.getTotalDebt()));
         return debtPerPersonId;
     }
 
     private Map<String, Double> getRepaymentPerPersonId(List<Person> persons) {
         Map<String, Double> repaymentPerPersonId = new HashMap<>();
-        persons
-                .forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
+        persons.forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
         return repaymentPerPersonId;
+    }
+
+    private Map<String, Double> getTotalPaymentPerPersonId(List<Person> persons) {
+        Map<String, Double> paymentPerPersonId = new HashMap<>();
+        persons.forEach(person -> paymentPerPersonId.put(person.getId(), person.getTotalPayment()));
+        return paymentPerPersonId;
     }
 
     private String getPersonName(String id) {
@@ -179,6 +200,10 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         if (optionalPerson.isPresent()) {
             return optionalPerson.get().getName();
         } else return id;
+    }
+
+    private boolean paidBy(Person person, Expense expense) {
+        return expense.payerId().equalsIgnoreCase(person.getId());
     }
 
     @Override
