@@ -56,10 +56,11 @@ public class SplitvajsController {
         }
     }
 
-    @GetMapping("/expenses/{personId}")
-    public ResponseEntity getExpenses(@PathVariable(value = "personId") String personId) {
+    @DeleteMapping("/expenses/{expenseId}")
+    public ResponseEntity deleteExpense(@PathVariable(value = "expenseId") String expenseId) {
         try {
-            return ResponseEntity.ok(service.getExpenses(personId));
+            service.removeExpense(expenseId);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
@@ -74,11 +75,10 @@ public class SplitvajsController {
         }
     }
 
-    @DeleteMapping("/expenses/{expenseId}")
-    public ResponseEntity deleteExpense(@PathVariable(value = "expenseId") String expenseId) {
+    @GetMapping("/expenses/{personId}")
+    public ResponseEntity getExpenses(@PathVariable(value = "personId") String personId) {
         try {
-            service.deleteExpense(expenseId);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(service.getExpenses(personId));
         } catch (Exception e) {
             return getExceptionResponse(e);
         }

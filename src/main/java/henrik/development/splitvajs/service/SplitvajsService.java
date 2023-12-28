@@ -14,8 +14,6 @@ public interface SplitvajsService {
 
     void clear();
 
-    void deleteExpense(String expenseId);
-
     List<ExpenseResponseModel> getExpenses();
 
     List<Expense> getExpenses(Person person);

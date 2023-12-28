@@ -40,6 +40,12 @@ public class Group {
                 : Optional.empty();
     }
 
+    public Optional<Expense> getExpenseById(String id) {
+        return expenses.containsKey(id)
+                ? Optional.of(expenses.get(id))
+                : Optional.empty();
+    }
+
     public List<Expense> getExpenses() {
         return expenses
                 .values()

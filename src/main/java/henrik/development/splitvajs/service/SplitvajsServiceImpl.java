@@ -77,11 +77,6 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public void deleteExpense(@NonNull String expenseId) {
-        group.removeExpense(expenseId);
-    }
-
-    @Override
     public List<ExpenseResponseModel> getExpenses() {
         List<Expense> expenses = group.getExpenses();
         List<Person> people = group.getPeople();
@@ -220,7 +215,33 @@ public class SplitvajsServiceImpl implements SplitvajsService {
 
     @Override
     public void removeExpense(@NonNull String id) {
+
+        Optional<Expense> optionalExpense = group.getExpenseById(id);
+
+        if (optionalExpense.isPresent()) {
+
+            Expense expense = optionalExpense.get();
+            String personId = expense.payerId();
+
+            Optional<Person> optionalPerson = group.getPersonById(personId);
+
+            if (optionalPerson.isPresent()) {
+
+                Person person = optionalPerson.get();
+
+                Optional<Expense> optionalPersonExpense = person
+                        .getExpenses()
+                        .stream()
+                        .filter(e -> e.id().equalsIgnoreCase(id))
+                        .findFirst();
+
+                if (optionalPersonExpense.isPresent()) {
+                    person.getExpenses().remove(optionalExpense.get());
+                }
+            }
+        }
         group.removeExpense(id);
+
     }
 
     @Override
