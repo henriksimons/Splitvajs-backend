@@ -1,4 +1,4 @@
-package henrik.development.splitvajs.service.v2;
+package henrik.development.splitvajs.service;
 
 import henrik.development.splitvajs.model.request.ExpenseRequestModel;
 import henrik.development.splitvajs.model.Split;

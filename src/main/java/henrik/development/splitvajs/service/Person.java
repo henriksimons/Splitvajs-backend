@@ -15,7 +15,7 @@ import java.util.Set;
 public class Person {
 
     @Getter
-    private final Map<String, Double> debt;
+    private final Map<String, Double> debt; // Is set on the go when the result is requested.
     @Getter
     private final Set<Expense> expenses;
     @Getter

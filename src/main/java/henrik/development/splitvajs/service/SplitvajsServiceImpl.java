@@ -161,7 +161,8 @@ public class SplitvajsServiceImpl implements SplitvajsService {
                         .totalExpenses(totalPaymentPerPersonId.get(result.getKey()))
                         .balance(result.getValue())
                         .build()
-                ).forEach(results::add);
+                )
+                .forEach(results::add);
 
         return results;
     }
@@ -171,7 +172,12 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         people.forEach(person -> {
             expenses.forEach(expense -> {
                 if (!paidBy(person, expense)) {
-                    double debt = (expense.value() / distribution);
+                    double debt;
+                    if (expense.split() == Split.EQUAL) {
+                        debt = (expense.value() / distribution);
+                    } else {
+                        debt = (expense.value() / (distribution - 1));
+                    }
                     person.addDebt(expense.id(), debt);
                 }
             });
