@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
+@CrossOrigin(origins = {"http://localhost:3000", "https://henriksimons.github.io/Splitvajs"}, maxAge = 3600)
 @RestController
 public class SplitvajsController {
     private final SplitvajsServiceImpl service;
