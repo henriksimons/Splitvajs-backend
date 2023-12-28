@@ -74,6 +74,16 @@ public class SplitvajsController {
         }
     }
 
+    @DeleteMapping("/expenses/{expenseId}")
+    public ResponseEntity deleteExpense(@PathVariable(value = "expenseId") String expenseId) {
+        try {
+            service.deleteExpense(expenseId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
     @GetMapping("/persons")
     public ResponseEntity getPersons() {
         try {

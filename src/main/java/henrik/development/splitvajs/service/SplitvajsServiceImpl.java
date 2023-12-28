@@ -77,6 +77,11 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
+    public void deleteExpense(@NonNull String expenseId) {
+        group.removeExpense(expenseId);
+    }
+
+    @Override
     public List<ExpenseResponseModel> getExpenses() {
         List<Expense> expenses = group.getExpenses();
         List<Person> people = group.getPeople();
