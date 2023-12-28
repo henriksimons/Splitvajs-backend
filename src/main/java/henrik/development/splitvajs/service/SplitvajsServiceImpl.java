@@ -89,6 +89,7 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     private ExpenseResponseModel mapExpenseResponseModel(List<Person> people, Expense expense) {
         return ExpenseResponseModel.builder()
                 .payerId(expense.payerId())
+                .expenseId(expense.id())
                 .payerName(getNameByPayerId(expense))
                 .value(expense.value())
                 .split(mapSplit(people.size(), expense.split()))
