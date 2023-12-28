@@ -1,5 +1,6 @@
-package henrik.development.splitvajs.model;
+package henrik.development.splitvajs.model.request;
 
+import henrik.development.splitvajs.model.Split;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Data
 @Builder
 @EqualsAndHashCode
-public class RequestModel {
+public class ExpenseRequestModel {
 
     /**
      * UUID representing the item.
@@ -37,11 +38,11 @@ public class RequestModel {
      */
     private Double cost;
     /**
-     * How many percent of the cost the payer expects in return.
+     * How many percent of the cost the person expects in return.
      */
     private Split split;
 
-    public RequestModel(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Split split) {
+    public ExpenseRequestModel(@NonNull String name, @NonNull String payer, @NonNull Double cost, @NonNull Split split) {
         this.name = Objects.requireNonNull(format(name));
         this.payer = Objects.requireNonNull(format(payer));
         this.cost = cost;
@@ -64,7 +65,7 @@ public class RequestModel {
         return "ExpenseItem{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", payer='" + payer + '\'' +
+                ", person='" + payer + '\'' +
                 ", cost=" + cost +
                 ", repayment=" + split +
                 ", creationDate=" + creationDate +

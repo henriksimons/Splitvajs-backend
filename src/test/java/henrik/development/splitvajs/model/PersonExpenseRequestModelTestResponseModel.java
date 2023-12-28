@@ -1,56 +1,57 @@
 package henrik.development.splitvajs.model;
 
 
+import henrik.development.splitvajs.model.request.ExpenseRequestModel;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PersonRequestModelTest {
+class PersonExpenseRequestModelTestResponseModel {
 
     @Test
     void testFirstLetterOfNameIsCapitalized() {
         String expected = "Lowercase";
         String input = "lowercase";
-        RequestModel requestModel = RequestModel.builder()
+        ExpenseRequestModel expenseRequestModel = ExpenseRequestModel.builder()
                 .name(input)
                 .cost(0D)
                 .split(Split.EQUAL)
                 .payer(input)
                 .build();
-        assertEquals(expected, requestModel.getName());
-        assertEquals(expected, requestModel.getPayer());
+        assertEquals(expected, expenseRequestModel.getName());
+        assertEquals(expected, expenseRequestModel.getPayer());
     }
 
     @Test
     void testExpenseItemCanNotBeInitiatedWithForbiddenNullValues() {
         assertThrows(NullPointerException.class, () -> {
-            RequestModel.builder()
+            ExpenseRequestModel.builder()
                     .name(null)
                     .cost(0D)
                     .split(Split.EQUAL)
-                    .payer("payer")
+                    .payer("person")
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            RequestModel.builder()
+            ExpenseRequestModel.builder()
                     .name("Name")
                     .cost(null)
                     .split(Split.EQUAL)
-                    .payer("payer")
+                    .payer("person")
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            RequestModel.builder()
+            ExpenseRequestModel.builder()
                     .name("Name")
                     .cost(0D)
                     .split(null)
-                    .payer("payer")
+                    .payer("person")
                     .build();
         });
         assertThrows(NullPointerException.class, () -> {
-            RequestModel.builder()
+            ExpenseRequestModel.builder()
                     .name("Name")
                     .cost(0D)
                     .split(Split.EQUAL)
@@ -61,22 +62,22 @@ class PersonRequestModelTest {
 
     @Test
     void testIdIsGenerated() {
-        RequestModel requestModel = RequestModel.builder().payer("test").name("test").split(Split.EQUAL).cost(0D).build();
-        assertNotNull(requestModel.getId());
+        ExpenseRequestModel expenseRequestModel = ExpenseRequestModel.builder().payer("test").name("test").split(Split.EQUAL).cost(0D).build();
+        assertNotNull(expenseRequestModel.getId());
     }
 
     @Test
     void testCreationDateIsGenerated() {
         LocalDate localDate = LocalDate.now();
 
-        RequestModel requestModel = RequestModel.builder()
+        ExpenseRequestModel expenseRequestModel = ExpenseRequestModel.builder()
                 .payer("test")
                 .name("test")
                 .split(Split.EQUAL)
                 .cost(0D)
                 .build();
 
-        assertNotNull(requestModel.getCreationDate());
-        assertEquals(localDate, requestModel.getCreationDate().toLocalDate());
+        assertNotNull(expenseRequestModel.getCreationDate());
+        assertEquals(localDate, expenseRequestModel.getCreationDate().toLocalDate());
     }
 }

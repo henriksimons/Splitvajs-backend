@@ -1,4 +1,4 @@
-package henrik.development.splitvajs.model;
+package henrik.development.splitvajs.model.request;
 
 import lombok.Data;
 

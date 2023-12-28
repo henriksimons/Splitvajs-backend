@@ -1,85 +1,47 @@
 package henrik.development.splitvajs.controller;
 
-
-import henrik.development.splitvajs.model.RequestModel;
-import henrik.development.splitvajs.service.ExpenseItem;
-import henrik.development.splitvajs.service.IndividualRepayment;
-import henrik.development.splitvajs.service.SplitvajsService;
+import henrik.development.splitvajs.model.request.ExpenseRequestModel;
+import henrik.development.splitvajs.model.request.PersonRequestModel;
+import henrik.development.splitvajs.service.Expense;
+import henrik.development.splitvajs.service.Person;
+import henrik.development.splitvajs.service.SplitvajsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
-import java.util.Set;
 
+@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 @RestController
+@RequestMapping("/v2")
 public class SplitvajsController {
-
-    private final SplitvajsService service;
+    private final SplitvajsServiceImpl service;
 
 
     @Autowired
-    public SplitvajsController(SplitvajsService service) {
+    public SplitvajsController(SplitvajsServiceImpl service) {
         this.service = Objects.requireNonNull(service, "SplitvajsService can not be null.");
     }
 
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("pong");
-    }
-
-    @GetMapping("/expenses")
-    public ResponseEntity getExpenses() {
-        try {
-            Set<ExpenseItem> expenseModels = service.getAll();
-            return ResponseEntity.ok(expenseModels);
-        } catch (Exception e) {
-            return getExceptionResponse(e);
-        }
-    }
-
-    @GetMapping("/repayments/individual")
-    public ResponseEntity getIndividualRepayments() {
-        try {
-            Set<IndividualRepayment> response = service.getIndividualRepayments();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return getExceptionResponse(e);
-        }
-    }
-
-    @GetMapping("/result")
-    public ResponseEntity getResult() {
-        try {
-            return ResponseEntity.ok(service.getResult());
-        } catch (Exception e) {
-            return getExceptionResponse(e);
-        }
-    }
-
-    @GetMapping("/payers")
-    public ResponseEntity getPayers() {
-        try {
-            return ResponseEntity.ok(service.getPayers());
-        } catch (Exception e) {
-            return getExceptionResponse(e);
-        }
-    }
-
     @PostMapping("/expense")
-    public ResponseEntity addExpense(@RequestBody RequestModel item) {
+    public ResponseEntity addExpense(@RequestBody ExpenseRequestModel request) {
         try {
-            RequestModel addedItem = service.add(item);
-            return ResponseEntity.ok(String.format("Expense item added: %s", addedItem));
+            Expense added = service.addExpense(request);
+            return ResponseEntity.ok(added);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
     }
 
-    @DeleteMapping("/expenses/{id}")
-    public ResponseEntity remove(@PathVariable String id) {
+    private ResponseEntity<String> getExceptionResponse(Exception e) {
+        return ResponseEntity.internalServerError().body(e.getMessage());
+    }
+
+    @PostMapping("/person")
+    public ResponseEntity addPerson(@RequestBody PersonRequestModel request) {
         try {
-            return ResponseEntity.ok(service.removeById(id));
+            Person added = service.addPerson(request.getName());
+            return ResponseEntity.ok(added);
         } catch (Exception e) {
             return getExceptionResponse(e);
         }
@@ -95,7 +57,44 @@ public class SplitvajsController {
         }
     }
 
-    private ResponseEntity<String> getExceptionResponse(Exception e) {
-        return ResponseEntity.internalServerError().body(e.getMessage());
+    @GetMapping("/expenses/{personId}")
+    public ResponseEntity getExpenses(@PathVariable(value = "personId") String personId) {
+        try {
+            return ResponseEntity.ok(service.getExpenses(personId));
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @GetMapping("/expenses")
+    public ResponseEntity getExpenses() {
+        try {
+            return ResponseEntity.ok(service.getExpenses());
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @GetMapping("/payers")
+    public ResponseEntity getPersons() {
+        try {
+            return ResponseEntity.ok(service.getPeople());
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @GetMapping("/result")
+    public ResponseEntity getResult() {
+        try {
+            return ResponseEntity.ok(service.getResult());
+        } catch (Exception e) {
+            return getExceptionResponse(e);
+        }
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
     }
 }

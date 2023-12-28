@@ -1,175 +1,35 @@
 package henrik.development.splitvajs.service;
 
-import henrik.development.splitvajs.model.RequestModel;
-import henrik.development.splitvajs.model.Split;
-import lombok.Data;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
+import henrik.development.splitvajs.model.request.ExpenseRequestModel;
+import henrik.development.splitvajs.model.response.ExpenseResponseModel;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
-@Service
-@Data
-public class SplitvajsService {
+public interface SplitvajsService {
 
-    private final Set<Payer> payers = new HashSet<>();
-    private final Set<RequestModel> requestModels = new HashSet<>();
-    private final Set<ExpenseItem> total = new HashSet<>();
+    Expense addExpense(ExpenseRequestModel expenseRequestModel);
 
-    public RequestModel add(@NonNull RequestModel requestModel) {
-        requestModels.add(requestModel);
-        handleExpense(requestModel);
-        return requestModel;
-    }
+    Person addPerson(String name);
 
-    private void handleExpense(RequestModel request) {
+    void clear();
 
-        String payerName = request.getPayer();
-        String expenseName = request.getName();
-        Double cost = request.getCost();
-        Split split = request.getSplit();
-        String expenseId = UUID.randomUUID().toString();
-        LocalDateTime creationDate = LocalDateTime.now();
+    List<ExpenseResponseModel> getExpenses();
 
-        Optional<Payer> optionalPayer = getPayer(payerName);
+    List<Expense> getExpenses(Person person);
 
-        if (optionalPayer.isPresent()) {
-            handleExistingPayer(expenseId, expenseName, cost, creationDate, split, optionalPayer.get());
-        } else {
-            handleNewPayer(payerName, expenseName, cost, split, expenseId, creationDate);
-        }
-    }
+    List<Expense> getExpenses(String payerId);
 
+    List<Person> getPeople();
 
-    private Optional<Payer> getPayer(String payerName) {
-        if (payerName == null || payerName.isBlank()) {
-            throw new IllegalArgumentException("Parameter name can not be null or empty.");
-        }
-        return payers
-                .stream()
-                .filter(p -> p.getName().equalsIgnoreCase(payerName))
-                .findFirst();
-    }
+    Person getPerson(String name);
 
-    private void handleNewPayer(String payerName, String expenseName, Double cost, Split split, String expenseId, LocalDateTime creationDate) {
-        Payer payer = Payer.builder()
-                .name(payerName)
-                .build();
-        payer.getExpenses().add(PayerExpense.builder()
-                .amount(cost)
-                .creationDate(creationDate)
-                .split(split)
-                .expenseId(expenseId)
-                .name(expenseName)
-                .build());
-        payers.add(payer);
-        addToTotal(expenseId, expenseName, cost, creationDate, payer, split);
-    }
+    Person getPersonById(String id);
 
-    private void handleExistingPayer(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Split split, Payer payer) {
-        payer.getExpenses().add(
-                PayerExpense.builder()
-                        .amount(cost)
-                        .creationDate(creationDate)
-                        .split(split)
-                        .expenseId(expenseId)
-                        .name(expenseName)
-                        .build()
-        );
-        addToTotal(expenseId, expenseName, cost, creationDate, payer, split);
-    }
+    Map<String, Double> getResult();
 
+    void removeExpense(String id);
 
-    private void addToTotal(String expenseId, String expenseName, Double cost, LocalDateTime creationDate, Payer payer, Split split) {
-        total.add(
-                ExpenseItem.builder()
-                        .amount(cost)
-                        .creationDate(creationDate)
-                        .expenseId(expenseId)
-                        .name(expenseName)
-                        .payerName(payer.getName())
-                        .split(split)
-                        .build()
-        );
-    }
+    void removePerson(String id);
 
-    public Set<ExpenseItem> getAll() {
-        return total;
-    }
-
-    public Set<IndividualRepayment> getIndividualRepayments() {
-        return payers.stream()
-                .map(payer -> IndividualRepayment.builder().name(payer.getName()).expectedRepayment(payer.getExpectedRepayment()).build())
-                .collect(Collectors.toSet());
-    }
-
-    private Set<String> getPayersInternal() {
-        return requestModels.stream()
-                .map(RequestModel::getPayer)
-                .collect(Collectors.toSet());
-    }
-
-    public Set<Payer> getPayers() {
-        return payers;
-    }
-
-    private Double calculateRepayment(RequestModel requestModel, Set<String> payers) {
-        Double cost = requestModel.getCost();
-        int numOfPayers = payers.size();
-        Split split = requestModel.getSplit();
-        if (split == Split.EQUAL) {
-            return cost / numOfPayers;
-        } else
-            return cost;
-    }
-
-    public void clear() {
-        requestModels.clear();
-    }
-
-    public RepaymentReceiver getRepaymentReceiver() {
-        Set<IndividualRepayment> individualRepayments = getIndividualRepayments();
-
-        final Double[] costs = {0D, 0D};
-        final String[] payerName = {null};
-
-/*        individualRepayments.forEach((payer, cost) -> {
-            if (cost > costs[0]) {
-                costs[1] = costs[0];
-                costs[0] = cost;
-                name[0] = payer;
-            }
-        });*/
-
-        return RepaymentReceiver.builder()
-                .outlayAmount(costs[0] - costs[1])
-                .name(payerName[0])
-                .build();
-    }
-
-    public Result getResult() {
-        Integer numberOfPayers = getPayers().size() - 1; // Because the name does not split the rest.
-        RepaymentReceiver repaymentReceiver = getRepaymentReceiver();
-        return Result.builder()
-                .amountToReceive(repaymentReceiver.getOutlayAmount() / numberOfPayers)
-                .receiverName(repaymentReceiver.getName())
-                .build();
-    }
-
-    public RequestModel removeById(String id) {
-        Optional<RequestModel> optionalExpenseItem = requestModels.stream()
-                .filter(requestModel -> requestModel.getId().equals(id))
-                .findFirst();
-        if (optionalExpenseItem.isPresent()) {
-            RequestModel requestModel = optionalExpenseItem.get();
-            requestModels.remove(requestModel);
-            return requestModel;
-        }
-        return null;
-    }
 }

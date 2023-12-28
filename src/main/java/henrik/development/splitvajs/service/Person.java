@@ -1,4 +1,4 @@
-package henrik.development.splitvajs.service.v2;
+package henrik.development.splitvajs.service;
 
 import henrik.development.splitvajs.model.Split;
 import lombok.AllArgsConstructor;
@@ -24,6 +24,22 @@ public class Person {
     private final String name;
     private Double totalPayment;
 
+    public void addDebt(String expenseId, Double debtValue) {
+        debt.put(expenseId, debtValue);
+    }
+
+    /**
+     * @return The total amount of debt this person has to a group.
+     */
+    public Double getTotalDebt() {
+        return debt.values().stream().reduce(0D, Double::sum);
+    }
+
+    public Double getTotalPayment() {
+        this.totalPayment = expenses.stream().map(Expense::value).reduce(0D, Double::sum);
+        return totalPayment;
+    }
+
     /**
      * @param distribution The number of people to split the cost.
      * @return Total repayment value to the person.
@@ -46,21 +62,5 @@ public class Person {
             return (expense.value() / distribution) * (distribution - 1);
         }
         return expense.value();
-    }
-
-    /**
-     * @return The total amount of debt this person has to a group.
-     */
-    public Double getTotalDebt() {
-        return debt.values().stream().reduce(0D, Double::sum);
-    }
-
-    public void addDebt(String expenseId, Double debtValue) {
-        debt.put(expenseId, debtValue);
-    }
-
-    public Double getTotalPayment() {
-        this.totalPayment = expenses.stream().map(Expense::value).reduce(0D, Double::sum);
-        return totalPayment;
     }
 }

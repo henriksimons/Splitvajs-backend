@@ -1,12 +1,15 @@
-package henrik.development.splitvajs.service.v2;
+package henrik.development.splitvajs.service;
 
-import henrik.development.splitvajs.model.RequestModel;
+import henrik.development.splitvajs.model.Split;
+import henrik.development.splitvajs.model.request.ExpenseRequestModel;
+import henrik.development.splitvajs.model.response.ExpenseResponseModel;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class SplitvajsServiceImpl implements SplitvajsService {
@@ -19,15 +22,15 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public Expense addExpense(@NonNull RequestModel requestModel) {
-        Person person = resolvePayer(requestModel.getPayer());
+    public Expense addExpense(@NonNull ExpenseRequestModel expenseRequestModel) {
+        Person person = resolvePerson(expenseRequestModel.getPayer());
         Expense expense = Expense.builder()
                 .dateOfCreation(LocalDateTime.now())
                 .id(UUID.randomUUID().toString())
-                .name(requestModel.getName())
+                .name(expenseRequestModel.getName())
                 .payerId(person.getId())
-                .value(requestModel.getCost())
-                .split(requestModel.getSplit())
+                .value(expenseRequestModel.getCost())
+                .split(expenseRequestModel.getSplit())
                 .build();
         group.addExpense(expense);
         Optional<Expense> optionalExpense = group.getExpense(expense);
@@ -38,15 +41,10 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return expense;
     }
 
-    @Override
-    public List<Expense> getExpenses() {
-        return group.getExpenses();
-    }
-
-    private Person resolvePayer(@NonNull String payerName) {
-        Optional<Person> optionalPayer = group.getPerson(payerName);
-        if (optionalPayer.isPresent()) {
-            return optionalPayer.get();
+    private Person resolvePerson(@NonNull String payerName) {
+        Optional<Person> optionalPerson = group.getPerson(payerName);
+        if (optionalPerson.isPresent()) {
+            return optionalPerson.get();
         } else {
             Person person = Person.builder()
                     .id(UUID.randomUUID().toString())
@@ -54,35 +52,65 @@ public class SplitvajsServiceImpl implements SplitvajsService {
                     .expenses(new HashSet<>())
                     .debt(new HashMap<>())
                     .build();
-            group.addPayer(person);
+            group.addPerson(person);
             return person;
         }
     }
 
     @Override
+    public Person addPerson(@NonNull String name) {
+        Person person = Person.builder()
+                .id(UUID.randomUUID().toString())
+                .debt(new HashMap<>())
+                .expenses(new HashSet<>())
+                .name(name)
+                .build();
+        return group.addPerson(person);
+    }
+
+    @Override
     public void clear() {
         group.clearExpenses();
-        group.clearPayers();
+        group.clearPersons();
     }
 
     @Override
-    public void removePerson(@NonNull String id) {
-        group.removePerson(id);
+    public List<ExpenseResponseModel> getExpenses() {
+        List<Expense> expenses = group.getExpenses();
+        List<Person> people = group.getPeople();
+
+        return expenses.stream()
+                .map(expense -> mapExpenseResponseModel(people, expense))
+                .collect(Collectors.toList());
+    }
+
+    private ExpenseResponseModel mapExpenseResponseModel(List<Person> people, Expense expense) {
+        return ExpenseResponseModel.builder()
+                .payerId(expense.payerId())
+                .payerName(getNameByPayerId(expense))
+                .value(expense.value())
+                .split(mapSplit(people.size(), expense.split()))
+                .name(expense.name())
+                .build();
+    }
+
+    private String getNameByPayerId(Expense expense) {
+        Optional<Person> optionalPerson = group.getPersonById(expense.payerId());
+        return optionalPerson.map(Person::getName).orElse(null);
+    }
+
+    private Double mapSplit(int numberOfPersons, Split split) {
+        return split == Split.EQUAL ? (1.0 / numberOfPersons) * 100 : 100;
     }
 
     @Override
-    public void removeExpense(@NonNull String id) {
-        group.removeExpense(id);
+    public List<Expense> getExpenses(@NonNull Person person) {
+        return group.getExpensesForPerson(person);
     }
 
     @Override
-    public Person getPersonById(@NonNull String id) {
-        return group.getPayerById(id).orElse(null);
-    }
-
-    @Override
-    public Person getPerson(@NonNull String name) {
-        return group.getPerson(name).orElse(null);
+    public List<Expense> getExpenses(@NonNull String payerId) {
+        return group.getExpensesByPersonId(payerId);
     }
 
     @Override
@@ -91,13 +119,13 @@ public class SplitvajsServiceImpl implements SplitvajsService {
     }
 
     @Override
-    public List<Expense> getExpenses(@NonNull Person person) {
-        return group.getExpensesForPayer(person);
+    public Person getPerson(@NonNull String name) {
+        return group.getPerson(name).orElse(null);
     }
 
     @Override
-    public List<Expense> getExpenses(@NonNull String payerId) {
-        return group.getExpensesByPayerId(payerId);
+    public Person getPersonById(@NonNull String id) {
+        return group.getPersonById(id).orElse(null);
     }
 
     @Override
@@ -128,24 +156,6 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         return balancePerPersonId;
     }
 
-    @Override
-    public Person addPerson(@NonNull String name) {
-        Person person = Person.builder()
-                .id(UUID.randomUUID().toString())
-                .debt(new HashMap<>())
-                .expenses(new HashSet<>())
-                .name(name)
-                .build();
-        return group.addPerson(person);
-    }
-
-    private String getPersonName(String id) {
-        Optional<Person> optionalPerson = group.getPayerById(id);
-        if (optionalPerson.isPresent()) {
-            return optionalPerson.get().getName();
-        } else return id;
-    }
-
     private boolean paidBy(Person person, Expense expense) {
         return expense.payerId().equalsIgnoreCase(person.getId());
     }
@@ -162,5 +172,22 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         persons
                 .forEach(person -> repaymentPerPersonId.put(person.getId(), person.getTotalRepayment(persons.size())));
         return repaymentPerPersonId;
+    }
+
+    private String getPersonName(String id) {
+        Optional<Person> optionalPerson = group.getPersonById(id);
+        if (optionalPerson.isPresent()) {
+            return optionalPerson.get().getName();
+        } else return id;
+    }
+
+    @Override
+    public void removeExpense(@NonNull String id) {
+        group.removeExpense(id);
+    }
+
+    @Override
+    public void removePerson(@NonNull String id) {
+        group.removePerson(id);
     }
 }
