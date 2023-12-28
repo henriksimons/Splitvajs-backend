@@ -164,6 +164,8 @@ public class SplitvajsServiceImpl implements SplitvajsService {
                 )
                 .forEach(results::add);
 
+        clearDebt(people);
+
         return results;
     }
 
@@ -207,6 +209,12 @@ public class SplitvajsServiceImpl implements SplitvajsService {
         if (optionalPerson.isPresent()) {
             return optionalPerson.get().getName();
         } else return id;
+    }
+
+    private void clearDebt(List<Person> people) {
+        for (Person person : people) {
+            person.clearDebt();
+        }
     }
 
     private boolean paidBy(Person person, Expense expense) {

@@ -28,6 +28,10 @@ public class Person {
         debt.put(expenseId, debtValue);
     }
 
+    public void clearDebt(){
+        debt.clear();
+    }
+
     /**
      * @return The total amount of debt this person has to a group.
      */
